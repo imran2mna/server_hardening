@@ -6,3 +6,6 @@
 /redhat-8/data/*
 /debian/data/*
 /suse-11/data/*
+
+/inventory/*
+/data/*

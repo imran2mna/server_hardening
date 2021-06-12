@@ -1,0 +1,103 @@
+---
+
+################################
+# Acitivity Logging 
+################################# 
+      
+  - name: Configure login rules
+    lineinfile:
+      line: "{{ item }}"
+      path:  /etc/audit/rules.d/login.rules
+      create: true
+    with_items:
+      - "-w /var/log/faillog -p wa -k logins"
+      - "-w /var/log/lastlog -p wa -k logins"
+
+
+  - name: Configure access rules
+    lineinfile:
+      line: "{{ item }}"
+      path:  /etc/audit/rules.d/access.rules
+      create: true
+    with_items:
+      - "-a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access"
+      - "-a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access"
+      - "-a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access"
+      - "-a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access"
+
+
+  - name: Configure time change rules
+    lineinfile:
+      line: "{{ item }}"
+      path:  /etc/audit/rules.d/time-change.rules
+      create: true
+    with_items:
+      - "-a always,exit -F arch=b64 -S adjtimex -S settimeofday -k time-change"
+      - "-a always,exit -F arch=b32 -S adjtimex -S settimeofday -S stime -k time-change -a always,exit -F arch=b64 -S clock_settime -k time-change"
+      - "-a always,exit -F arch=b32 -S clock_settime -k time-change"
+      - "-w /etc/localtime -p wa -k time-change"
+
+
+  - name: Configure user group rules
+    lineinfile:
+      line: "{{ item }}"
+      path:  /etc/audit/rules.d/user-group.rules
+      create: true
+    with_items:
+      - "-w /etc/group -p wa -k identity"
+      - "-w /etc/passwd -p wa -k identity"
+      - "-w /etc/gshadow -p wa -k identity"
+      - "-w /etc/shadow -p wa -k identity"
+      - "-w /etc/security/opasswd -p wa -k identity"
+
+
+
+
+  - name: Install rsyslog (SUSE)
+    zypper:
+      state: present
+      name: rsyslog
+    when: info.ansible_facts.ansible_distribution_file_variety == "SUSE" 
+
+  
+
+  - name: Configure rsyslog server in client
+    lineinfile:
+      line: "*.* @@{{ syslog_server }}"
+      path:  /etc/rsyslog.d/log-collector.conf
+      create: true
+    register: syslog_conf
+
+
+  - name: Restart rsyslog service
+    service:
+      name: rsyslog
+      state: reloaded
+    when: syslog_conf.changed and syslog_conf.msg != ""
+
+
+  - name: Configure session rules
+    lineinfile:
+      line: "{{ item }}"
+      path:  /etc/audit/rules.d/session.rules
+      create: true
+    with_items:
+      - "-w /var/run/utmp -p wa -k session" 
+      - "-w /var/log/wtmp -p wa -k logins"
+      - "-w /var/log/btmp -p wa -k logins"
+
+
+  - name: Configure auditd log storage size
+    lineinfile:
+      path: /etc/audit/auditd.conf
+      regexp: '[#|\s]*max_log_file[\s|\t]+=[\s|\t]+[0-9]*'
+      line: "max_log_file = {{ audit_log_size }}"
+      state: present
+
+
+#     - name: Reload auditd service
+#       reboot:
+#         connect_timeout: 60
+#       tags:
+#         - never
+#         - configuration

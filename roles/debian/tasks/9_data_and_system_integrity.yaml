@@ -1,0 +1,28 @@
+---
+
+################################
+# Integrity and confidentiality 
+################################# 
+
+  - name: Install aide package (Ubuntu/Debian)
+    apt:
+      state: present
+      name: aide
+    register: aide_ubuntu
+
+
+  - name: Initialize AIDE (Debian)
+    shell: "{{ scripts_dir }}/aide_init_debian.sh"
+    register: aideinit
+
+
+  - name: AIDE check cron
+    cron:
+      name: aide check
+      month: "*"
+      weekday: "*"
+      hour: "5"
+      user: root
+      minute: "0"
+      job: "/usr/sbin/aide --check"
+     

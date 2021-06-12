@@ -1,0 +1,57 @@
+---
+
+  - name: Server Hardening
+    hosts: all
+    gather_facts: false
+    ignore_unreachable: true
+
+    become: true
+    become_user: root
+
+    vars:
+
+      scripts_dir: /opt/scripts
+
+      password_min_day: 7
+      password_warn_day: 7
+      account_inactive_days: 30
+      password_minlen: 14
+      password_minclass: 4
+      client_alive_interval: 300
+      client_alive_count: 0
+
+      banner_path: /etc/issue.net
+      banner_msg: Authorized uses only. All activity may be monitored and reported.
+
+      syslog_server: loghost.example.com
+      audit_log_size: 16
+
+    tasks:
+
+      - name: Gather information
+        setup:
+        register: info
+
+
+      - name: RedHat 7/8
+        vars:
+        include_role:
+          name: redhat-8
+        when: info.ansible_facts.ansible_distribution_file_variety == "RedHat" and (info.ansible_facts.ansible_distribution_major_version == "7" or info.ansible_facts.ansible_distribution_major_version == "8")  
+
+
+      - name: SUSE
+        vars:
+        include_role:
+          name: suse-11
+        when: info.ansible_facts.ansible_distribution_file_variety == "SUSE"
+
+
+      - name: Ubuntu/Debian
+        vars:
+        include_role:
+          name: debian
+        when: info.ansible_facts.ansible_distribution_file_variety == "Debian"
+
+
+

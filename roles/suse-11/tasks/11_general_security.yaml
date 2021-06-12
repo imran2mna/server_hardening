@@ -1,0 +1,27 @@
+---
+################################
+# Security patches 
+################################# 
+
+### SUSE
+      
+  - name: Check security patches (SUSE)
+    shell: "zypper list-updates"
+    args:
+      warn: false
+    register: zypper_check
+    ignore_errors: true
+
+
+  - name: Security patch results (SUSE)
+    debug:
+      var: zypper_check.stdout_lines
+
+
+  - name: Apply security patches (SUSE)
+    shell: zypper update -y
+    register: security_suse
+
+
+      
+

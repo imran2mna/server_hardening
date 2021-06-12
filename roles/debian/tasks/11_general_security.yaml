@@ -1,0 +1,10 @@
+---
+
+################################
+# Security patches 
+################################# 
+
+  - name: Apply security patches (Debian)
+    shell: "apt update"
+      
+

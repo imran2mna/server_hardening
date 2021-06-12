@@ -1,0 +1,64 @@
+---
+
+  - name: Useful scripts
+    hosts: all
+    become: true
+    become_user: root
+    vars:
+      backup_dir: /opt/security-etc-
+    tasks:
+
+      - name: Gather Information
+        setup:
+        register: info
+        tags:
+          - always
+
+
+      - name: Backup config files to backup folder (Debian)
+        copy:
+          dest: "{{ item }}"
+          src: "{{ backup_dir }}{{ info.ansible_facts.ansible_date_time.date }}{{ item }}"
+          directory_mode:
+          remote_src: true
+        with_items:
+          - /etc/ssh/sshd_config
+          - /usr/lib/systemd/system/rescue.service
+          - /usr/lib/systemd/system/emergency.service
+          - /etc/security/pwquality.conf
+          - /etc/login.defs
+          - /etc/issue
+          - /etc/issue.net
+        when: info.ansible_facts.ansible_distribution_file_variety == "Debian" 
+
+
+      - name: Backup config files to backup folder (SUSE)
+        copy:
+          dest: "{{ item }}"
+          src: "{{ backup_dir }}{{ info.ansible_facts.ansible_date_time.date }}{{ item }}"
+          directory_mode:
+          remote_src: true
+        with_items:
+          - /etc/ssh/sshd_config
+          - /etc/inittab
+          - /etc/login.defs
+          - /etc/issue
+          - /etc/issue.net
+          - /etc/audit/auditd.conf
+          - /etc/pam.d/common-password
+        when: info.ansible_facts.ansible_distribution_file_variety == "SUSE" 
+
+
+      - name: Remove files added into system
+        file:
+          path: "{{ item }}"
+          state: absent
+        with_items:
+          - /etc/audit/rules.d/login.rules
+          - /etc/audit/rules.d/access.rules
+          - /etc/audit/rules.d/time-change.rules
+          - /etc/audit/rules.d/user-group.rules
+          - /etc/audit/rules.d/session.rules
+          -  /etc/rsyslog.d/log-collector.conf
+
+

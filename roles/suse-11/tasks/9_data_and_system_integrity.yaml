@@ -1,0 +1,29 @@
+---
+
+
+################################
+# Integrity and confidentiality 
+################################# 
+
+  - name: Install aide package (SUSE)
+    zypper:
+      state: present
+      name: aide
+    register: aide_suse
+
+  
+  - name: Initialize AIDE
+    shell: "{{ scripts_dir }}/aide_init_rhel.sh"
+    register: aideinit
+
+
+  - name: AIDE check cron
+    cron:
+      name: aide check
+      month: "*"
+      weekday: "*"
+      hour: "5"
+      user: root
+      minute: "0"
+      job: "/usr/sbin/aide --check"
+     

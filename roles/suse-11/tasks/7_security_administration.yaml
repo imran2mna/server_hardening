@@ -1,0 +1,50 @@
+# enable banner on SSH
+  - name: Configure banner on SSH
+    lineinfile:
+      path: /etc/ssh/sshd_config
+      regexp: '[#|\s]*Banner*'
+      line: "Banner {{ banner_path }}"
+      state: present
+    register: sshbanner
+    
+
+  - name: Restart SSH service
+    service:
+      state: reloaded 
+      name: sshd
+    when: sshbanner.changed
+
+# banner
+  - name: Remove old banner file
+    file:
+      path: "{{ banner_path }}"
+      state: absent
+
+
+  - name: Insert banner message
+    lineinfile:
+      path: "{{ banner_path }}" 
+      line: "{{ banner_msg }}" 
+      state: present
+      create: true
+
+
+# local banner message
+  - name: Remove old banner file
+    file:
+      path: "{{ banner_path }}"
+      state: absent
+
+
+  - name: Insert banner message
+    lineinfile:
+      path: "{{ banner_path }}" 
+      line: "{{ banner_msg }}" 
+      state: present
+      create: true
+
+
+  - name: Default group for root user
+    shell:  'if [ ! $(grep "^root:" /etc/passwd | cut -f4 -d:) -eq 0 ]; then  usermod -g 0 root; fi'
+
+
