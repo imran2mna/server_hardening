@@ -3,9 +3,13 @@
 
   - name: Server detail fetcher
     hosts: all
+
     gather_facts: false
     ignore_unreachable: true
     serial: 5
+
+    become: false
+
     vars:
       access_server_file: "access.csv"
       no_route_server_file: "no-route.txt"

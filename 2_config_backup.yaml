@@ -86,24 +86,28 @@
 
 
 
+      - block:
+        - name: Install libpwquality-tools, auditd (Debian)
+          apt:
+            name: ['libpwquality-tools', 'auditd']
+            state: present
 
-      - name: Backup config files to backup folder (Debian)
-        copy:
-          src: "{{ item }}"
-          dest: "{{ backup_dir }}{{ info.ansible_facts.ansible_date_time.date }}{{ item }}"
-          directory_mode:
-          remote_src: true
+
+        - name: Backup config files to backup folder (Debian)
+          copy:
+            src: "{{ item }}"
+            dest: "{{ backup_dir }}{{ info.ansible_facts.ansible_date_time.date }}{{ item }}"
+            directory_mode:
+            remote_src: true
+          with_items:
+            - /etc/ssh/sshd_config
+            - /usr/lib/systemd/system/rescue.service
+            - /usr/lib/systemd/system/emergency.service
+            - /etc/login.defs
+            - /etc/issue
+            - /etc/issue.net
+            - /etc/audit/auditd.conf
         when: info.ansible_facts.ansible_distribution_file_variety == "Debian" 
-        with_items:
-          - /etc/ssh/sshd_config
-          - /usr/lib/systemd/system/rescue.service
-          - /usr/lib/systemd/system/emergency.service
-          - /etc/security/pwquality.conf
-          - /etc/login.defs
-          - /etc/issue
-          - /etc/issue.net
-          - /etc/audit/auditd.conf
-
 
 
 

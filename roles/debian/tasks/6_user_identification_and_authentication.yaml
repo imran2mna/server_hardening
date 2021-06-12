@@ -11,10 +11,12 @@
     register: presence01
     ignore_errors: true
 
+
   - name: Confirm single user mode in rescue.service
     debug:
       msg: "Single user mode is enabled in resuce.service"
     when: presence01.rc == 0
+
 
   - name: Configure single user mode in rescue.service
     lineinfile:
@@ -25,16 +27,19 @@
     when: presence01.rc != 0
     register: config01
 
+
 # emergency service
   - name: Verify single user mode in emergency.service
     shell: 'grep /systemd-sulogin-shell /usr/lib/systemd/system/emergency.service'
     ignore_errors: true
     register: presence02
 
+
   - name: Confirm single user mode in emergency.service
     debug:
       msg: "Single user mode is enabled in emergency.service"
     when: presence02.rc == 0
+
 
   - name: Configure single user mode in emergency.service
     lineinfile:
@@ -44,6 +49,7 @@
       state: present
     when: presence02.rc != 0
     register: config02
+
 
 # systemd daemon-reload
   - name: Reload systemd daemon configuration
@@ -62,6 +68,7 @@
     debug:
       msg: "Host based authentication is disabled on SSH"
     when: auth01.rc == 0
+
 
   - name: Disable host based authentication on SSH
     lineinfile:
@@ -115,6 +122,7 @@
     shell: "{{ info.ansible_facts.ansible_python.executable }} {{ scripts_dir }}/min_days_verfication.py /etc/security/pwquality.conf minclass {{ password_minclass }} ="
     ignore_errors: true
     register: minclass01
+
 
   - name: Confirm minclass in pwquality.conf
     debug:
@@ -280,4 +288,3 @@
       state: reloaded
       name: sshd
     when: sshconfig01.changed or sshconfig02.changed or sshconfig03.changed or sshconfig04.changed 
-
