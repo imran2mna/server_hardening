@@ -7,14 +7,31 @@
     gather_facts: false
     vars:
       backup_dir: /opt/security-etc-
+      scripts_parent_dir: /opt
     tasks:
 
 
       - name: Gather Information
         setup:
         register: info
-        tags:
-          - always
+
+
+
+      - name: Delete remote script directory
+        file:
+          path: "{{ scripts_parent_dir }}/scripts"
+          state: absent
+
+
+
+      - name: Copy python scripts
+        copy:
+          src: scripts
+          dest: "{{ scripts_parent_dir }}"
+          directory_mode:
+          mode: '0550'
+
+
 
       - name: Create security-etc folder
         file:

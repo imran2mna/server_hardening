@@ -1,0 +1,31 @@
+---
+
+################################
+# Security patches 
+################################# 
+
+### RedHat 6
+      
+  - name: Check security patches (RedHat 6)
+    shell: "yum check-update"
+    args:
+      warn: false
+    when: info.ansible_facts.ansible_distribution_file_variety == "RedHat" and info.ansible_facts.ansible_distribution_major_version == "6"
+    register: yum_check
+    changed_when: "yum_check.rc == 100"
+    ignore_errors: true
+
+  - name: Security patch results (RedHat 6)
+    debug:
+      var: yum_check.stdout_lines
+    when: info.ansible_facts.ansible_distribution_file_variety == "RedHat" and info.ansible_facts.ansible_distribution_major_version == "6" 
+
+
+  - name: Apply security patches (RedHat 6)
+    shell: yum update -y
+    when: info.ansible_facts.ansible_distribution_file_variety == "RedHat" and info.ansible_facts.ansible_distribution_major_version == "6"
+    register: security_rhel7
+
+
+  
+

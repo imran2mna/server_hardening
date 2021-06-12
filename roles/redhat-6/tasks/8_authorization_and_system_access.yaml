@@ -1,0 +1,71 @@
+---
+
+#########
+# AUDIT
+#########
+
+  - name: Find priviledged executable files
+    shell: find / -xdev -perm -4000 -o -perm 2000
+    register: exec_file
+    tags:
+      - never
+      - configuration
+
+
+  - name: Find minimum user uid
+    shell: awk '/^\s*UID_MIN/{print $2}' /etc/login.defs
+    register: uid
+    tags:
+      - never
+      - configuration
+
+
+  - name: Create audit record inside audit rules
+    lineinfile:
+      path: /etc/audit/rules.d/non-privledged.rules
+      line: "-a always,exit -F path={{ item }} -F perm=x -F auid>={{ uid.stdout_lines[0] }} -F auid!=4294967295 -k privileged"
+      create: true
+    with_items: "{{ exec_file.stdout_lines }}"
+    when: exec_file.rc == 0 and uid.rc == 0
+    tags:
+      - never
+      - configuration
+
+#############################
+# Authorization Configuration 
+#############################
+
+# ignore remote hosts on SSH
+
+  - name: Configure ignore remote hosts on SSH
+    lineinfile:
+      path: /etc/ssh/sshd_config
+      regexp: '[#|\s]*IgnoreRhosts\s+[yes|no]'
+      line: "IgnoreRhosts yes"
+      state: present
+
+
+  - name: Disable root login on SSH
+    lineinfile:
+      path: /etc/ssh/sshd_config
+      regexp: '[#|\s]*PermitRootLogin\s+[yes|no]'
+      line: "PermitRootLogin no"
+      state: present
+
+
+  - name: Restart SSH service
+    shell: "service {{ item }} restart"
+    args:
+      warn: false
+    with_items:
+      - sshd
+
+
+  - name: Add permission on files
+    shell: "chown root:root {{ item }} && chmod 0644 {{ item }}"
+    args:
+      warn: false
+    with_items:
+      - /etc/hosts.allow
+      - /etc/ssh/sshd_config
+

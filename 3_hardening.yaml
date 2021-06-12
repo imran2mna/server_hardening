@@ -3,7 +3,6 @@
   - name: Server Hardening
     hosts: all
     gather_facts: false
-    ignore_unreachable: true
 
     become: true
     become_user: root
@@ -54,4 +53,8 @@
         when: info.ansible_facts.ansible_distribution_file_variety == "Debian"
 
 
-
+      - name: RedHat 6
+        vars:
+        include_role:
+          name: redhat-6
+        when: info.ansible_facts.ansible_distribution_file_variety == "RedHat" and info.ansible_facts.ansible_distribution_major_version == "6"

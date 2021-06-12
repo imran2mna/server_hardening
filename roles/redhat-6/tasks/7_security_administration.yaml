@@ -1,0 +1,67 @@
+---
+
+############################
+# Business use notices 
+############################
+
+# enable banner on SSH
+  - name: Configure banner on SSH
+    lineinfile:
+      path: /etc/ssh/sshd_config
+      regexp: '[#|\s]*Banner*'
+      line: "Banner {{ banner_path }}"
+      state: present
+    register: sshbanner
+    
+
+  - name: Restart SSH service
+    shell: "service {{ item }} restart"
+    with_items:
+      - sshd
+    when: sshbanner.changed
+
+# banner
+  - name: Remove old banner file
+    file:
+      path: "{{ banner_path }}"
+      state: absent
+
+
+  - name: Insert banner message
+    lineinfile:
+      path: "{{ banner_path }}" 
+      line: "{{ banner_msg }}" 
+      state: present
+      create: true
+
+
+# local banner message
+  - name: Remove old banner file
+    file:
+      path: "{{ banner_path }}"
+      state: absent
+
+
+  - name: Insert banner message
+    lineinfile:
+      path: "{{ banner_path }}" 
+      line: "{{ banner_msg }}" 
+      state: present
+      create: true
+
+# grub permission
+# ansible 'file' module does not work properly, so utilizing commandline
+#
+
+  - name: Configure GRUB file permissions
+    shell: "chown root:root {{ item }} && chmod 0600 {{ item }}"
+    args:
+      warn: false
+    with_items:
+      - /boot/grub/grub.conf
+
+
+  - name: Default group for root user
+    shell:  'if [ ! $(grep "^root:" /etc/passwd | cut -f4 -d:) -eq 0 ]; then  usermod -g 0 root; fi'
+
+

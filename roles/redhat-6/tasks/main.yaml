@@ -1,0 +1,13 @@
+---
+
+- include_tasks: 6_user_identification_and_authentication.yaml
+
+- include_tasks: 7_security_administration.yaml 
+
+- include_tasks: 8_authorization_and_system_access.yaml 
+
+- include_tasks: 9_data_and_system_integrity.yaml
+
+- include_tasks: 10_security_audit_alarms.yaml
+
+- include_tasks: 11_general_security.yaml
