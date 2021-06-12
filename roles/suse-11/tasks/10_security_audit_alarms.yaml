@@ -98,6 +98,3 @@
 #     - name: Reload auditd service
 #       reboot:
 #         connect_timeout: 60
-#       tags:
-#         - never
-#         - configuration

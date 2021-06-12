@@ -54,9 +54,6 @@
 #       shell: "{{ scripts_dir }}/auth-changer.sh"
 #       # we need to modify scripts further
 #       ignore_errors: true
-#       tags:
-#         - never
-#         - recommend
 
 
 # minimum user password days

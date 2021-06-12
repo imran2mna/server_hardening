@@ -135,8 +135,7 @@
     shell: sshd -T | grep permitemptypasswords | grep no
     register: auth02
     ignore_errors: true
-    tags:
-      - always
+
 
   - name: Confirm empty password blocking on SSH
     debug:

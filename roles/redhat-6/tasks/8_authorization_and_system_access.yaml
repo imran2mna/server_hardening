@@ -7,17 +7,11 @@
   - name: Find priviledged executable files
     shell: find / -xdev -perm -4000 -o -perm 2000
     register: exec_file
-    tags:
-      - never
-      - configuration
 
 
   - name: Find minimum user uid
     shell: awk '/^\s*UID_MIN/{print $2}' /etc/login.defs
     register: uid
-    tags:
-      - never
-      - configuration
 
 
   - name: Create audit record inside audit rules
@@ -27,9 +21,6 @@
       create: true
     with_items: "{{ exec_file.stdout_lines }}"
     when: exec_file.rc == 0 and uid.rc == 0
-    tags:
-      - never
-      - configuration
 
 #############################
 # Authorization Configuration 

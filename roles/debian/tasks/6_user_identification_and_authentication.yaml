@@ -164,9 +164,6 @@
 
   - name: Apply minimum user password days to existing user accounts
     shell: "{{ scripts_dir }}/useraccount_chage_min_days.sh {{ password_min_day }}"
-    tags:
-      - never
-      - configuration
 
 
   - name: Verify password change on past days
