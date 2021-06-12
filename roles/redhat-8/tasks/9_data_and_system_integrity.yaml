@@ -1,0 +1,37 @@
+---
+
+################################
+# Integrity and confidentiality 
+################################# 
+
+  - name: Install aide package (RedHat 7)
+    yum:
+      state: present
+      name: aide
+    when: info.ansible_facts.ansible_distribution_file_variety == "RedHat" and info.ansible_facts.ansible_distribution_major_version == "7"
+    register: aide_rhel7
+
+
+  - name: Install aide package (RedHat 8)
+    dnf:
+      state: present
+      name: aide
+    when: info.ansible_facts.ansible_distribution_file_variety == "RedHat" and info.ansible_facts.ansible_distribution_major_version == "8"
+    register: aide_rhel8
+  
+
+  - name: Initialize AIDE
+    shell: "{{ scripts_dir }}/aide_init_rhel.sh"
+    register: aideinit
+
+
+  - name: AIDE check cron
+    cron:
+      name: aide check
+      month: "*"
+      weekday: "*"
+      hour: "5"
+      user: root
+      minute: "0"
+      job: "/usr/sbin/aide --check"
+       

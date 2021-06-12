@@ -15,7 +15,7 @@
           - always
 
 
-      - name: Backup config files to backup folder (Debian)
+      - name: Restore files (Debian)
         copy:
           dest: "{{ item }}"
           src: "{{ backup_dir }}{{ info.ansible_facts.ansible_date_time.date }}{{ item }}"
@@ -32,7 +32,7 @@
         when: info.ansible_facts.ansible_distribution_file_variety == "Debian" 
 
 
-      - name: Backup config files to backup folder (SUSE)
+      - name: Restore files (SUSE)
         copy:
           dest: "{{ item }}"
           src: "{{ backup_dir }}{{ info.ansible_facts.ansible_date_time.date }}{{ item }}"
@@ -47,6 +47,7 @@
           - /etc/audit/auditd.conf
           - /etc/pam.d/common-password
         when: info.ansible_facts.ansible_distribution_file_variety == "SUSE" 
+
 
 
       - name: Remove files added into system
