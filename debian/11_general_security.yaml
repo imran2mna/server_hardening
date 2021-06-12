@@ -1,0 +1,33 @@
+---
+
+  - name: General Security
+    hosts: all
+    gather_facts: false
+    become: true
+    become_user: root
+    tasks:
+      - name: Gather Information
+        setup:
+        register: info
+        tags:
+          - always
+
+################################
+# Security patches 
+################################# 
+
+
+
+### Ubuntu
+
+
+
+      - name: Apply security patches (Debian)
+        shell: "apt update --security -y"
+        when: info.ansible_facts.ansible_distribution_file_variety == "Debian" 
+        register: security_rhel8
+        tags:
+          - never
+          - recommend
+      
+

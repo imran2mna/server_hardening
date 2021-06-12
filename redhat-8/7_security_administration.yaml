@@ -1,0 +1,110 @@
+---
+
+  - name: Security Administration
+    hosts: all
+    gather_facts: false
+    become: true
+    become_user: root
+    vars:
+      banner_path: /etc/issue.net
+      banner_msg: Authorized uses only. All activity may be monitored and reported.
+      scripts_dir: /opt/scripts
+    tasks:
+
+      - name: Gather Information
+        setup:
+        register: info
+        tags:
+          - always
+
+############################
+# Business use notices 
+############################
+
+# enable banner on SSH
+      - name: Configure banner on SSH
+        lineinfile:
+          path: /etc/ssh/sshd_config
+          regexp: '[#|\s]*Banner*'
+          line: "Banner {{ banner_path }}"
+          state: present
+        register: sshbanner
+        tags:
+          - never
+          - configuration
+        
+
+      - name: Restart SSH service
+        systemd:
+          state: restarted 
+          name: sshd
+        when: sshbanner.changed
+        tags:
+          - never
+          - configuration
+
+# banner
+      - name: Remove old banner file
+        file:
+          path: "{{ banner_path }}"
+          state: absent
+        tags:
+          - never
+          - configuration
+
+
+      - name: Insert banner message
+        lineinfile:
+          path: "{{ banner_path }}" 
+          line: "{{ banner_msg }}" 
+          state: present
+          create: true
+        tags:
+          - never
+          - configuration
+
+
+# local banner message
+      - name: Remove old banner file
+        file:
+          path: "{{ banner_path }}"
+          state: absent
+        tags:
+          - never
+          - configuration
+
+
+      - name: Insert banner message
+        lineinfile:
+          path: "{{ banner_path }}" 
+          line: "{{ banner_msg }}" 
+          state: present
+          create: true
+        tags:
+          - never
+          - configuration
+
+# grub permission
+# ansible 'file' module does not work properly, so utilizing commandline
+#
+
+      - name: Configure GRUB file permissions (RedHat)
+        shell: "chown root:root {{ item }} && chmod 0600 {{ item }}"
+        args:
+          warn: false
+        with_items:
+          - /boot/grub2/grub.cfg
+          - /boot/grub2/grubenv
+        when: info.ansible_facts.ansible_distribution_file_variety == "RedHat" 
+        tags:
+          - never
+          - configuration
+
+
+      - name: Default group for root user
+        shell:  'if [ ! $(grep "^root:" /etc/passwd | cut -f4 -d:) -eq 0 ]; then  usermod -g 0 root; fi'
+        tags:
+          - never
+          - configuration
+
+

@@ -1,0 +1,78 @@
+---
+
+  - name: Specific Configuration
+    hosts: all
+    gather_facts: false
+    become: true
+    become_user: root
+    tasks:
+      - name: Gather Information
+        setup:
+        register: info
+        tags:
+          - always
+
+################################
+# Disable usb storage 
+################################# 
+
+      
+      - name: Configure usb-storage module disabled in system
+        lineinfile:
+          path: /etc/modprobe.d/usb_storage.conf
+          line: "install usb-storage /bin/true"
+          state: present
+          create: true
+        register: usb_storage
+        tags:
+          - never
+          - configuration
+
+
+      - name: Enable and check whether disabled
+        shell: "modprobe -n -v usb-storage && sleep 1 && lsmod | grep usb-storage"
+        register: usb_load
+        when: (usb_storage.changed) or (usb_storage.failed != true)
+        changed_when: "usb_load.rc != 0"
+        ignore_errors: true
+        tags:
+          - never
+          - configuration
+
+
+      - name: Disable services if they are not running
+        shell: "chkconfig {{ item }} off"
+        with_items:
+          - autofs
+          - dovecot
+          - nfs
+          - rpcbind
+          - slapd
+          - ypserv
+          - xinted
+          - vsftpd
+          - httpd
+          - smb
+          - squid
+          - snmpd
+        ignore_errors: true
+        tags:
+          - never
+          - configuration
+
+
+      - name: Disable packet redirection on system
+        shell: "chkconfig {{ item }} off"
+        with_items:
+          - chargen-dgram
+          - chargen-stream
+        ignore_errors: true
+        tags:
+          - never
+          - configuration
+
+
+       
+
+
+

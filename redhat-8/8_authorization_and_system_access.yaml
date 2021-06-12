@@ -1,0 +1,149 @@
+---
+
+  - name: Authorization and System Access 
+    hosts: all
+    gather_facts: false
+    become: true
+    become_user: root
+    vars:
+    tasks:
+
+      - name: Gather Information
+        setup:
+        register: info
+        tags:
+          - always
+
+      - name: Find priviledged executable files
+        shell: find / -xdev -perm -4000 -o -perm 2000
+        register: exec_file
+        tags:
+          - never
+          - configuration
+    
+
+      - name: Find minimum user uid
+        shell: awk '/^\s*UID_MIN/{print $2}' /etc/login.defs
+        register: uid
+        tags:
+          - never
+          - configuration
+
+
+      - name: Create audit record inside audit rules
+        lineinfile:
+          path: /etc/audit/rules.d/non-privledged.rules
+          line: "-a always,exit -F path={{ item }} -F perm=x -F auid>={{ uid.stdout_lines[0] }} -F auid!=4294967295 -k privileged"
+          create: true
+        with_items: "{{ exec_file.stdout_lines }}"
+        when: exec_file.rc == 0 and uid.rc == 0
+        tags:
+          - never
+          - configuration
+
+
+      - name: Install sudo package (RedHat 7)
+        yum:
+          state: present
+          name: sudo
+        when: info.ansible_facts.ansible_distribution_file_variety == "RedHat" and info.ansible_facts.ansible_distribution_major_version == "7"
+        tags:
+          - never
+          - configuration
+
+
+      - name: Install sudo package (RedHat 8)
+        yum:
+          state: present
+          name: sudo
+        when: info.ansible_facts.ansible_distribution_file_variety == "RedHat" and info.ansible_facts.ansible_distribution_major_version == "8"
+        tags:
+          - never
+          - configuration
+
+
+#############################
+# Authorization Configuration 
+#############################
+
+# ignore remote hosts on SSH
+
+
+      - name: Verify ignore remote hosts on SSH
+        shell: sshd -T | grep ignorerhosts | grep yes
+        register: vremote
+        ignore_errors: true
+        tags:
+          - always
+
+      - name: Confirm ignore remote hosts on SSH
+        debug:
+          msg: "Ignore remote hosts is enabled on SSH"
+        when: vremote.rc == 0
+        tags:
+          - always
+
+      - name: Configure ignore remote hosts on SSH
+        lineinfile:
+          path: /etc/ssh/sshd_config
+          regexp: '[#|\s]*IgnoreRhosts\s+[yes|no]'
+          line: "IgnoreRhosts yes"
+          state: present
+        register: remotehost01
+        when: vremote.rc != 0
+        tags:
+          - never
+          - configuration
+
+
+      - name: Verify root login is disabled on SSH
+        shell: sshd -T | grep permitrootlogin | grep no
+        register: vrootlog
+        ignore_errors: true
+        tags:
+          - always
+
+      - name: Confirm root login is disabled on SSH 
+        debug: 
+          msg: "Permit root login is disabled on SSH"
+        when: vrootlog.rc == 0
+        tags:
+          - always
+
+
+      - name: Disable root login on SSH
+        lineinfile:
+          path: /etc/ssh/sshd_config
+          regexp: '[#|\s]*PermitRootLogin\s+[yes|no]'
+          line: "PermitRootLogin no"
+          state: present
+        register: permitroot01
+        when: vrootlog.rc != 0
+        tags:
+          - never
+          - configuration
+
+
+      - name: Permissions on sshd_config file
+        shell: "chown root:root {{ item }} && chmod 0600 {{ item }}"
+        args:
+          warn: false
+        with_items:
+          - /etc/ssh/sshd_config
+        tags:
+          - never
+          - configuration
+
+
+
+      - name: Restart SSH service
+        systemd:
+          state: restarted 
+          name: sshd
+        tags:
+          - never
+          - configuration
+
+
+
+        
