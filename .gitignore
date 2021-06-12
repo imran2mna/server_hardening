@@ -1,7 +1,5 @@
 /redhat-6/inventory/*
-/redhat-8/inventory/*
 /redhat-6/data/*
-/redhat-8/data/*
 
 /inventory/*
 /data/*

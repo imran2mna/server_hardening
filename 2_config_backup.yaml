@@ -35,7 +35,7 @@
           dest: "{{ backup_dir }}{{ info.ansible_facts.ansible_date_time.date }}{{ item }}"
           directory_mode:
           remote_src: true
-        when: info.ansible_facts.ansible_distribution_file_variety == "RedHat" 
+        when: info.ansible_facts.ansible_distribution_file_variety == "RedHat" and (info.ansible_facts.ansible_distribution_major_version == "7" or info.ansible_facts.ansible_distribution_major_version == "8")
         with_items:
           - /etc/ssh/sshd_config
           - /usr/lib/systemd/system/rescue.service
@@ -47,6 +47,7 @@
           - /etc/audit/auditd.conf
           - /etc/pam.d/system-auth 
           - /etc/pam.d/password-auth
+
 
 
 

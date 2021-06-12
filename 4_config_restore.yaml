@@ -14,6 +14,25 @@
         tags:
           - always
 
+      - name: Restore files (RHEL 7/8)
+        copy:
+          dest: "{{ item }}"
+          src: "{{ backup_dir }}{{ info.ansible_facts.ansible_date_time.date }}{{ item }}"
+          directory_mode:
+          remote_src: true
+        with_items:
+          - /etc/ssh/sshd_config
+          - /usr/lib/systemd/system/rescue.service
+          - /usr/lib/systemd/system/emergency.service
+          - /etc/security/pwquality.conf
+          - /etc/login.defs
+          - /etc/issue
+          - /etc/issue.net
+          - /etc/audit/auditd.conf
+          - /etc/pam.d/system-auth 
+          - /etc/pam.d/password-auth
+        when: info.ansible_facts.ansible_distribution_file_variety == "RedHat" and (info.ansible_facts.ansible_distribution_major_version == "7" or info.ansible_facts.ansible_distribution_major_version == "8")
+
 
       - name: Restore files (Debian)
         copy:

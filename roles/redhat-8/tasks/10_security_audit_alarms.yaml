@@ -1,20 +1,5 @@
 ---
 
-  - name: Security Audit and Alarms
-    hosts: all
-    gather_facts: false
-    become: true
-    become_user: root
-    vars:
-      syslog_server: loghost.example.com
-      audit_log_size: 16
-    tasks:
-      - name: Gather Information
-        setup:
-        register: info
-        tags:
-          - always
-
 ################################
 # Acitivity Logging 
 ################################# 
