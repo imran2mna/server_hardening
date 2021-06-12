@@ -72,13 +72,13 @@
     register: sshconfig01
 
 # Enabling bootloader password
-# - name: Inject grub password script
-#   copy:
-#     src: custom_scripts/custom-grub-password
-#     dest: /usr/bin
-#     mode: 'u+x'
-#     owner: root
-#     group: root
+  - name: Inject grub password script
+    copy:
+      src: custom_scripts/custom-grub-password
+      dest: /usr/bin
+      mode: 'u+x'
+      owner: root
+      group: root
 
 
 ####################

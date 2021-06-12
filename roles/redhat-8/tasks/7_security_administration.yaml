@@ -60,7 +60,6 @@
     with_items:
       - /boot/grub2/grub.cfg
       - /boot/grub2/grubenv
-    when: info.ansible_facts.ansible_distribution_file_variety == "RedHat" 
 
 
   - name: Default group for root user

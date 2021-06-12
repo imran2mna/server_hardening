@@ -7,9 +7,9 @@ fi
 
 for i in $(grep -E ^[^:]+:[^\!*] /etc/shadow | cut -d: -f1)
 do
-	if [ ! $i == "root" ]; then
-		chage --inactive $1 $i
-	fi
+#if [ ! $i == "root" ]; then
+	chage --inactive $1 $i
+#fi
 done
 
 for i in $(grep -E ^[^:]+:[^\!*] /etc/shadow | cut -d: -f7)
