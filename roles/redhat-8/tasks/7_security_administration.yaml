@@ -60,6 +60,9 @@
     with_items:
       - /boot/grub2/grub.cfg
       - /boot/grub2/grubenv
+      - /boot/efi/EFI/redhat/grub.cfg
+      - /boot/efi/EFI/redhat/grubenv
+    ignore_errors: true
 
 
   - name: Default group for root user

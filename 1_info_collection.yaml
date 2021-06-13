@@ -10,12 +10,9 @@
 
     become: false
 
-    vars:
-      access_server_file: "access.csv"
-      no_route_server_file: "no-route.txt"
-      credential_server_file: "credentials.txt"
-      raw_server_file: "raw.txt"
     tasks:
+
+      - include_vars: config/collector.yaml
 
       - name: Create data directory for groups
         file:

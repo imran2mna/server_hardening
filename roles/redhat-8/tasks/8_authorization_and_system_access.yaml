@@ -45,10 +45,12 @@
     register: vremote
     ignore_errors: true
 
+
   - name: Confirm ignore remote hosts on SSH
     debug:
       msg: "Ignore remote hosts is enabled on SSH"
     when: vremote.rc == 0
+
 
   - name: Configure ignore remote hosts on SSH
     lineinfile:
@@ -65,10 +67,12 @@
     register: vrootlog
     ignore_errors: true
 
+
   - name: Confirm root login is disabled on SSH 
     debug: 
       msg: "Permit root login is disabled on SSH"
     when: vrootlog.rc == 0
+
 
 
   - name: Disable root login on SSH
@@ -81,13 +85,19 @@
     when: vrootlog.rc != 0
 
 
+  - name: Allow only certain users on SSH
+    lineinfile:
+      path: /etc/ssh/sshd_config
+      line: "AllowUsers {{ ssh_user }}"
+      state: present
+
+
   - name: Permissions on sshd_config file
     shell: "chown root:root {{ item }} && chmod 0600 {{ item }}"
     args:
       warn: false
     with_items:
       - /etc/ssh/sshd_config
-
 
 
   - name: Restart SSH service

@@ -14,28 +14,57 @@
       - "-w /var/log/lastlog -p wa -k logins"
 
 
-  - name: Configure access rules
+  - name: Find minimum user uid
+    shell: awk '/^\s*UID_MIN/{print $2}' /etc/login.defs
+    register: uid
+
+
+
+  - name: Configure access rules (32-bit)
     lineinfile:
       line: "{{ item }}"
       path:  /etc/audit/rules.d/access.rules
       create: true
     with_items:
-      - "-a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access"
-      - "-a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access"
-      - "-a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access"
-      - "-a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access"
+      - "-a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>={{ uid.stdout_lines[0] }} -F auid!=4294967295 -k access"
+      - "-a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>={{ uid.stdout_lines[0] }} -F auid!=4294967295 -k access"
 
 
-  - name: Configure time change rules
+
+  - name: Configure access rules (64-bit)
+    lineinfile:
+      line: "{{ item }}"
+      path:  /etc/audit/rules.d/access.rules
+      create: true
+    with_items:
+      - "-a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>={{ uid.stdout_lines[0] }} -F auid!=4294967295 -k access"
+      - "-a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>={{ uid.stdout_lines[0] }} -F auid!=4294967295 -k access"
+    when:  info.ansible_facts.ansible_userspace_bits == "64"
+
+
+
+  - name: Configure time change rules (32-bit)
+    lineinfile:
+      line: "{{ item }}"
+      path:  /etc/audit/rules.d/time-change.rules
+      create: true
+    with_items:
+      - "-a always,exit -F arch=b32 -S adjtimex -S settimeofday -S stime -k time-change"
+      - "-a always,exit -F arch=b32 -S clock_settime -k time-change"
+      - "-w /etc/localtime -p wa -k time-change"
+
+
+
+  - name: Configure time change rules (64-bit)
     lineinfile:
       line: "{{ item }}"
       path:  /etc/audit/rules.d/time-change.rules
       create: true
     with_items:
       - "-a always,exit -F arch=b64 -S adjtimex -S settimeofday -k time-change"
-      - "-a always,exit -F arch=b32 -S adjtimex -S settimeofday -S stime -k time-change -a always,exit -F arch=b64 -S clock_settime -k time-change"
-      - "-a always,exit -F arch=b32 -S clock_settime -k time-change"
-      - "-w /etc/localtime -p wa -k time-change"
+      - "-a always,exit -F arch=b64 -S clock_settime -k time-change"
+    when:  info.ansible_facts.ansible_userspace_bits == "64"
+
 
 
   - name: Configure user group rules
@@ -51,13 +80,13 @@
       - "-w /etc/security/opasswd -p wa -k identity"
 
 
-
-
   - name: Install rsyslog (RedHat 7)
     yum:
       state: present
       name: rsyslog
     when: info.ansible_facts.ansible_distribution_file_variety == "RedHat" and info.ansible_facts.ansible_distribution_major_version == "7"
+
+
 
   - name: Install rsyslog package (RedHat 8)
     dnf:
@@ -65,6 +94,7 @@
       name: rsyslog
     when: info.ansible_facts.ansible_distribution_file_variety == "RedHat" and info.ansible_facts.ansible_distribution_major_version == "8"
   
+
 
   - name: Configure rsyslog server in client
     lineinfile:
@@ -74,11 +104,13 @@
     register: syslog_conf
 
 
+
   - name: Restart rsyslog service
     systemd:
       name: rsyslog
       state: restarted
     when: syslog_conf.changed and syslog_conf.msg != ""
+
 
 
   - name: Configure session rules

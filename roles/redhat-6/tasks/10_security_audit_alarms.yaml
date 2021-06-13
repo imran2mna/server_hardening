@@ -14,14 +14,19 @@
       - "-w /var/log/lastlog -p wa -k logins"
 
 
+  - name: Find minimum user uid
+    shell: awk '/^\s*UID_MIN/{print $2}' /etc/login.defs
+    register: uid
+
+
   - name: Configure access rules (32-bit)
     lineinfile:
       line: "{{ item }}"
       path:  /etc/audit/rules.d/access.rules
       create: true
     with_items:
-      - "-a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>=500 -F auid!=4294967295 -k access"
-      - "-a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>=500 -F auid!=4294967295 -k access"
+      - "-a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>={{ uid.stdout_lines[0] }} -F auid!=4294967295 -k access"
+      - "-a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>={{ uid.stdout_lines[0] }} -F auid!=4294967295 -k access"
 
   - name: Configure access rules (64-bit)
     lineinfile:
@@ -29,8 +34,8 @@
       path:  /etc/audit/rules.d/access.rules
       create: true
     with_items:
-      - "-a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>=500 -F auid!=4294967295 -k access"
-      - "-a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>=500 -F auid!=4294967295 -k access"
+      - "-a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>={{ uid.stdout_lines[0] }} -F auid!=4294967295 -k access"
+      - "-a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>={{ uid.stdout_lines[0] }} -F auid!=4294967295 -k access"
     when:  info.ansible_facts.ansible_userspace_bits == "64"
 
 

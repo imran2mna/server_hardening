@@ -85,6 +85,9 @@
 # Account Password
 ###################
 
+
+
+
 # password creation requirements 
 # minlen
   - name: Verify minlen in pwquality.conf
@@ -138,11 +141,27 @@
     ignore_errors: true
 
 
+
+# password creation requirements
+  - name: Configure password creation requirements
+    lineinfile:
+      path: "{{ item }}"
+      regex: '^password[\s|\t]+requisite[\s|\t]+pam_pwquality\.so.*'
+      line: "password requisite pam_pwquality.so try_first_pass local_users_only enforce-for-root retry=3 "
+      state: present
+      create: true
+    with_items:
+      - /etc/pam.d/password-auth
+      - /etc/pam.d/system-auth
+
+
+
 # minimum user password days
   - name: Verify minimum user password days
     shell: "{{ info.ansible_facts.ansible_python.executable }} {{ scripts_dir }}/min_days_verfication.py /etc/login.defs PASS_MIN_DAYS {{ password_min_day }}"
     register: password01
     ignore_errors: true
+
 
   - name: Confirm minimum user password days
     debug:
@@ -158,6 +177,7 @@
       state: present
     when: password01.rc != 0
     register: passconfig01
+
 
   - name: Apply minimum user password days to existing user accounts
     shell: "{{ scripts_dir }}/useraccount_chage_min_days.sh {{ password_min_day }}"
@@ -208,6 +228,7 @@
     register: auth02
     ignore_errors: true
 
+
   - name: Confirm empty password blocking on SSH
     debug:
       msg: "Empty password is blocked on SSH"
@@ -229,6 +250,7 @@
     shell: "{{ info.ansible_facts.ansible_python.executable }} {{ scripts_dir }}/min_days_verfication.py /etc/ssh/sshd_config ClientAliveInterval  {{ client_alive_interval }}"
     register: auth03
     ignore_errors: true
+
 
   - name: Confirm client alive interval on SSH
     debug:

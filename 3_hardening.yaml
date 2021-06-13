@@ -7,23 +7,7 @@
     become: true
     become_user: root
 
-    vars:
 
-      scripts_dir: /opt/scripts
-
-      password_min_day: 7
-      password_warn_day: 7
-      account_inactive_days: 30
-      password_minlen: 14
-      password_minclass: 4
-      client_alive_interval: 300
-      client_alive_count: 0
-
-      banner_path: /etc/issue.net
-      banner_msg: Authorized uses only. All activity may be monitored and reported.
-
-      syslog_server: loghost.example.com
-      audit_log_size: 16
 
     tasks:
 
