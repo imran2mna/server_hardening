@@ -5,9 +5,13 @@
     become: true
     become_user: root
     gather_facts: false
+
+    vars:
+      backup_dir: /opt/security-etc-
+      scripts_parent_dir: /opt
+
     tasks:
 
-      - include_vars: config/backup.yaml
 
       - name: Gather Information
         setup:
