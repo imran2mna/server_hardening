@@ -14,6 +14,10 @@
         tags:
           - always
 
+
+
+
+
       - name: Restore files (RHEL 7/8)
         copy:
           dest: "{{ item }}"
@@ -32,6 +36,28 @@
           - /etc/pam.d/system-auth 
           - /etc/pam.d/password-auth
         when: info.ansible_facts.ansible_distribution_file_variety == "RedHat" and (info.ansible_facts.ansible_distribution_major_version == "7" or info.ansible_facts.ansible_distribution_major_version == "8")
+
+
+
+
+      - name: Backup config files to backup folder (RedHat 6)
+        copy:
+          dest: "{{ item }}"
+          src: "{{ backup_dir }}{{ info.ansible_facts.ansible_date_time.date }}{{ item }}"
+          directory_mode:
+          remote_src: true
+        with_items:
+          - /etc/sysconfig/init
+          - /etc/ssh/sshd_config
+          - /boot/grub/grub.conf
+          - /etc/pam.d/system-auth
+          - /etc/pam.d/password-auth
+          - /etc/login.defs
+          - /etc/issue
+          - /etc/issue.net
+          - /etc/audit/auditd.conf
+        when: info.ansible_facts.ansible_distribution_file_variety == "RedHat" and info.ansible_facts.ansible_distribution_major_version == "6"
+
 
 
       - name: Restore files (Debian)
@@ -79,6 +105,7 @@
           - /etc/audit/rules.d/time-change.rules
           - /etc/audit/rules.d/user-group.rules
           - /etc/audit/rules.d/session.rules
+          - /etc/audit/rules.d/non-privledged.rules
           -  /etc/rsyslog.d/log-collector.conf
 
 

@@ -14,28 +14,47 @@
       - "-w /var/log/lastlog -p wa -k logins"
 
 
-  - name: Configure access rules
+  - name: Configure access rules (32-bit)
     lineinfile:
       line: "{{ item }}"
       path:  /etc/audit/rules.d/access.rules
       create: true
     with_items:
-      - "-a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access"
-      - "-a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>=1000 -F auid!=4294967295 -k access"
-      - "-a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access"
-      - "-a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>=1000 -F auid!=4294967295 -k access"
+      - "-a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>=500 -F auid!=4294967295 -k access"
+      - "-a always,exit -F arch=b32 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>=500 -F auid!=4294967295 -k access"
+
+  - name: Configure access rules (64-bit)
+    lineinfile:
+      line: "{{ item }}"
+      path:  /etc/audit/rules.d/access.rules
+      create: true
+    with_items:
+      - "-a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EACCES -F auid>=500 -F auid!=4294967295 -k access"
+      - "-a always,exit -F arch=b64 -S creat -S open -S openat -S truncate -S ftruncate -F exit=-EPERM -F auid>=500 -F auid!=4294967295 -k access"
+    when:  info.ansible_facts.ansible_userspace_bits == "64"
 
 
-  - name: Configure time change rules
+  - name: Configure time change rules (32-bit)
+    lineinfile:
+      line: "{{ item }}"
+      path:  /etc/audit/rules.d/time-change.rules
+      create: true
+    with_items:
+      - "-a always,exit -F arch=b32 -S adjtimex -S settimeofday -S stime -k time-change"
+      - "-a always,exit -F arch=b32 -S clock_settime -k time-change"
+      - "-w /etc/localtime -p wa -k time-change "
+
+
+  - name: Configure time change rules (64-bit)
     lineinfile:
       line: "{{ item }}"
       path:  /etc/audit/rules.d/time-change.rules
       create: true
     with_items:
       - "-a always,exit -F arch=b64 -S adjtimex -S settimeofday -k time-change"
-      - "-a always,exit -F arch=b32 -S adjtimex -S settimeofday -S stime -k time-change -a always,exit -F arch=b64 -S clock_settime -k time-change"
-      - "-a always,exit -F arch=b32 -S clock_settime -k time-change"
-      - "-w /etc/localtime -p wa -k time-change"
+      - "-a always,exit -F arch=b64 -S clock_settime -k time-change"
+    when:  info.ansible_facts.ansible_userspace_bits == "64"
+
 
 
   - name: Configure user group rules
@@ -69,6 +88,8 @@
 
   - name: Restart rsyslog service
     shell: "service rsyslog restart"
+    args:
+      warn: false
     when: syslog_conf.changed 
 
 
@@ -89,6 +110,7 @@
       regexp: '[#|\s]*max_log_file[\s|\t]+=[\s|\t]+[0-9]*'
       line: "max_log_file = {{ audit_log_size }}"
       state: present
+
 
 
 #     - name: Reload auditd service

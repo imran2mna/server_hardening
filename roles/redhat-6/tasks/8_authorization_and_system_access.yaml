@@ -22,6 +22,31 @@
     with_items: "{{ exec_file.stdout_lines }}"
     when: exec_file.rc == 0 and uid.rc == 0
 
+
+
+# Disable interactive boot
+  - name: Verify interactive boot is disabled in sysconfig-init
+    shell: 'grep PROMPT=no /etc/sysconfig/init'
+    register: iboot
+    ignore_errors: true
+
+
+  - name: Confirm interactive boot sysconfig-init
+    debug:
+      msg: "Interactive boot is disabled."
+    when: iboot.rc == 0
+
+
+  - name: Configure interactive boot in sysconfig-init
+    lineinfile:
+      path: /etc/sysconfig/init
+      regexp: '^PROMPT[=|a-z]*'
+      line: PROMPT=no
+      state: present
+    when: iboot.rc != 0
+    register: ibootconf
+
+
 #############################
 # Authorization Configuration 
 #############################
