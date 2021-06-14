@@ -132,6 +132,15 @@
       state: present
 
 
+  - name: Configure unsuccessful login attempts
+    lineinfile:
+      path: "{{ item[0] }}"
+      line: "{{ item[1] }}"
+      state: present
+    with_nested:
+      - [ "/etc/pam.d/password-auth" , "/etc/pam.d/system-auth"]
+      - [ "auth required pam_faillock.so preauth silent deny=5 unlock_time=900" , "auth required  pam_faillock.so authfail deny=5 unlock_time=900" ]
+
 #     - name: Reload auditd service
 #       reboot:
 #         connect_timeout: 60
